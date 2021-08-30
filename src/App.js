@@ -10,6 +10,7 @@ function App() {
   const [socket, setSocket] = useState(null)
   const setupSocket = ()=>{
     const token = localStorage.getItem('token')
+    
     if(token && !socket){
       const resultSocket = io('http://localhost:4000', {query:{
         token: localStorage.getItem('token')
