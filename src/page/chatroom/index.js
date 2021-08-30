@@ -23,8 +23,13 @@ const Chatroom = ({ socket, ...props }) => {
 
 
     if (socket){
-      socket.emit('sendMessage', { email: resultQuery.email, message: message, group: resultQuery.group})
-    setMessage('')
+      socket.emit('sendMessage', { email: resultQuery.email, message: message, group: resultQuery.group}, (data)=>{
+        setMessages([...messages, data])
+      })
+      // socket.emit('exampleCallback', 'risano@gmail.com', (data)=>{
+      //   alert(data)
+      // })
+      setMessage('')
     }
   }
   return (
@@ -38,7 +43,7 @@ const Chatroom = ({ socket, ...props }) => {
             {/* <h1>nilai count {count}</h1> */}
             <li class="list-group-item active" aria-current="true">group message {resultQuery.group}</li>
             {messages.map((item)=>
-              <li class="list-group-item">[{item.email}]::{item.message}</li>
+              <li class="list-group-item">[{item.email}]::{item.message} [{item.time}]</li>
             )}
             
           </ul>
