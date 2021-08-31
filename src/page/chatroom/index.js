@@ -1,34 +1,68 @@
 import React, { useEffect, useState } from 'react'
 import qs from 'query-string'
+import axios from 'axios'
+import './chatroom.css'
 
 const Chatroom = ({ socket, ...props }) => {
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState([])
+  const [friends, setFriends] = useState([])
+  const [friend, setFriend] = useState(null)
   const resultQuery = qs.parse(props.location.search)
   const [count, setCout] = useState(0)
+  
   useEffect(()=>{
-    if (socket){
-      socket.on('sendMsgFromBackend', (dataMsg) => {
-        setMessages((data) => {
-          return [...data, dataMsg]
-        }
-        )
-      })
-      socket.emit('initialGroup', { group: resultQuery.group, email: resultQuery.email})
-    }
+    if (socket && friend){
    
-  }, [socket])
+        socket.on('msgFromBackend', (data)=>{
+          if(data.receiver_id === friend.id){
+            setMessages((currentValue) => [...currentValue, data])
+          }else{
+            alert(`${data.receiver_id} -> ${data.message}` )
+          }
+
+        })
+    
+    }
+  }, [socket, friend])
+
+  // ini untuk get friends
+  useEffect(()=>{
+    axios.get('http://localhost:4000/v1/users/', {
+      headers:{
+        authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then((res)=>{
+      const dataUsers= res.data.data
+      setFriends(dataUsers)
+    })
+  },[])
+
+  useEffect(() => {
+    if (friend){
+    axios.get(`http://localhost:4000/v1/messages/${friend.id}`,{
+      headers:{
+        authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    .then((res)=>{
+      const resultMsg = res.data.data
+      console.log(resultMsg);
+      setMessages(resultMsg)
+    })
+    }
+  }, [friend])
 
   const handleSendMessage = ()=>{
-
-
-    if (socket){
-      socket.emit('sendMessage', { email: resultQuery.email, message: message, group: resultQuery.group}, (data)=>{
-        setMessages([...messages, data])
+    if (socket && message){
+      console.log(friend);
+      socket.emit('sendMessage', {
+        idReceiver: friend.id,
+        messageBody: message
+      }, (data)=>{
+        setMessages((currentValue) => [...currentValue, data ])
       })
-      // socket.emit('exampleCallback', 'risano@gmail.com', (data)=>{
-      //   alert(data)
-      // })
       setMessage('')
     }
   }
@@ -36,23 +70,31 @@ const Chatroom = ({ socket, ...props }) => {
     <div className="container">
       <div className="row">
         <div className="col-md-3">
-
+          <ul class="list-group">
+            {friends.map((friend)=>
+              <li class="list-group-item" key={friend.id} onClick={() => setFriend(()=>friend)}>{friend.name}</li>
+            )}
+           
+          </ul>
         </div>
         <div className="col-md-9">
-          <ul class="list-group">
+          {friend && (<>
+          <ul class="list-group wrapper-chat">
             {/* <h1>nilai count {count}</h1> */}
-            <li class="list-group-item active" aria-current="true">group message {resultQuery.group}</li>
-            {messages.map((item)=>
-              <li class="list-group-item">[{item.email}]::{item.message} [{item.time}]</li>
+            <li class="list-group-item active" aria-current="true"> message [{friend.name}]</li>
+            {messages.map((item) =>
+              <li class={`'list-group-item' ${friend.id === item.receiver_id ? 'msg-item' : 'msg-item-friend'}`}>{item.message} [{item.created_at}]</li>
             )}
-            
           </ul>
-          <div class="input-group mb-3">
+           <div class="input-group mb-3">
             <input type="text" class="form-control" value={message} onChange={(e)=> setMessage(e.target.value)} placeholder="ketik pesan" />
             <div class="input-group-append">
               <button class="btn btn-outline-secondary" type="button" id="button-addon2" onClick={handleSendMessage}>Send Message</button>
             </div>
           </div>
+          </>)}
+          
+         
         </div>
       </div>
 

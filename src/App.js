@@ -11,15 +11,15 @@ function App() {
   const setupSocket = ()=>{
     const token = localStorage.getItem('token')
     
+    // ini saya gunakan ketika browser di refresh
     if(token && !socket){
-      const resultSocket = io('http://localhost:4000', {query:{
-        token: localStorage.getItem('token')
-      }})
-      resultSocket.on()
-
+      const resultSocket = io('http://localhost:4000',{
+        query: {
+          token: localStorage.getItem('token')
+        }
+      })
       setSocket(resultSocket)
     }
-
   }
 
   useEffect(() => {
@@ -27,17 +27,6 @@ function App() {
     // socket.emit('sendMsgToBack', 'hallo my name is risano')
   }, [])
 
-  useEffect(()=>{
-    if (socket){
-      socket.on('sendMsgToFront', (data) => {
-        alert(data)
-      })
-    }
-  }, [socket])
-
-  const myFucn = ()=>{
-    socket.emit('sendMsgToBack', { name: "risano", email: 'risano@gmail.com' })
-  }
   return (
     <BrowserRouter>
       <Switch>
