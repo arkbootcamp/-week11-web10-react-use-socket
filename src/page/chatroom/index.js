@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import qs from 'query-string'
 import axios from 'axios'
+import ScrollToBottom from 'react-scroll-to-bottom';
 import './chatroom.css'
 
 const Chatroom = ({ socket, ...props }) => {
@@ -13,9 +14,12 @@ const Chatroom = ({ socket, ...props }) => {
   
   useEffect(()=>{
     if (socket && friend){
-   
+        socket.off('msgFromBackend')
         socket.on('msgFromBackend', (data)=>{
-          if(data.receiver_id === friend.id){
+          console.log('sender id ', data.sender_id );
+          console.log('friend id', friend.id);
+
+          if (data.sender_id === friend.id){
             setMessages((currentValue) => [...currentValue, data])
           }else{
             alert(`${data.receiver_id} -> ${data.message}` )
@@ -82,12 +86,14 @@ const Chatroom = ({ socket, ...props }) => {
           <ul class="list-group wrapper-chat">
             {/* <h1>nilai count {count}</h1> */}
             <li class="list-group-item active" aria-current="true"> message [{friend.name}]</li>
+              <ScrollToBottom className={'scroll-bottom'}>
             {messages.map((item) =>
               <li class={`'list-group-item' ${friend.id === item.receiver_id ? 'msg-item' : 'msg-item-friend'}`}>{item.message} [{item.created_at}]</li>
             )}
+              </ScrollToBottom>
           </ul>
            <div class="input-group mb-3">
-            <input type="text" class="form-control" value={message} onChange={(e)=> setMessage(e.target.value)} placeholder="ketik pesan" />
+              <input type="text" class="form-control" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="ketik pesan" onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()} />
             <div class="input-group-append">
               <button class="btn btn-outline-secondary" type="button" id="button-addon2" onClick={handleSendMessage}>Send Message</button>
             </div>
